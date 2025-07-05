@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Especialist - Chat IA</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Seu CSS completo aqui */
+        :root {
+          --bg-color: #202123;
+          --sidebar-color: #101113;
+          --text-color: #fff;
+          --hover-color: rgba(255, 255, 255, 0.1);
+          --border-radius: 0.75rem;
+          --scrollbar-color: rgba(255, 255, 255, 0.2);
+          --header-height: 70px;
+          --red-line: #ff3b30;
+        }
+
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: 'Roboto', sans-serif;
+          background-color: var(--bg-color);
+          color: var(--text-color);
+          height: 100vh;
+          display: flex;
+          overflow: hidden;
+          padding-top: var(--header-height);
+        }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+          background-color: var(--scrollbar-color);
+          border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+          background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* LAYOUT PRINCIPAL */
+        .sidebar {
+          width: 260px;
+          height: 100%;
+          background-color: var(--sidebar-color);
+          border-right: 1px solid rgba(255, 255, 255, 0.05);
+          padding: 1rem;
+          display: flex;
+          flex-direction: column;
+          overflow-x: hidden;
+          overflow-y: auto;
+          position: relative;
+          transition: transform 0.3s ease;
+        }
+
+        .chat-container {
+          flex-grow: 1;
+          display: flex;
+          flex-direction: column;
+          height: calc(100vh - var(--header-height));
+        }
+
+        /* HEADER */
+        .header {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: var(--header-height);
+          background-color: var(--sidebar-color);
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0 2rem;
+          z-index: 100;
+          border-bottom: 2px solid var(--red-line);
+        }
+
+        .logo {
+          font-size: 1.5rem;
+          font-weight: bold;
+          color: var(--text-color);
+        }
+
+        .header-actions {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+
+        .expert-select {
+          background-color: transparent;
+          color: var(--text-color);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: var(--border-radius);
+          padding: 0.5rem 1rem;
+          font-size: 0.9rem;
+          cursor: pointer;
+        }
+
+        /* SIDEBAR COMPONENTS */
+        .sidebar-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+        }
+
+        .sidebar-header select {
+          background-color: transparent;
+          color: var(--text-color);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: var(--border-radius);
+          padding: 0.5rem;
+          font-size: 0.9rem;
+          cursor: pointer;
+        }
+
+        .sidebar-header select:focus {
+          outline: none;
+          border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .sidebar-menu {
+          flex-grow: 1;
+          margin-bottom: 1rem;
+        }
+
+        .sidebar-menu ul {
+          list-style: none;
+          padding: 0;
+        }
+
+        .sidebar-menu li a {
+          display: flex;
+          align-items: center;
+          color: var(--text-color);
+          text-decoration: none;
+          padding: 0.75rem;
+          border-radius: var(--border-radius);
+          transition: background-color 0.2s ease;
+          margin-bottom: 0.5rem;
+        }
+
+        .sidebar-menu li a:hover {
+          background-color: var(--hover-color);
+        }
+
+        .sidebar-menu li a i {
+          margin-right: 0.75rem;
+          width: 20px;
+          height: 20px;
+        }
+
+        .sidebar-footer {
+          padding: 1rem 0;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-footer button {
+          background-color: #10a37f;
+          color: var(--text-color);
+          border: none;
+          border-radius: var(--border-radius);
+          padding: 0.75rem 1rem;
+          font-size: 1rem;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        }
+
+        .sidebar-footer button:hover {
+          background-color: #0e8c6d;
+        }
+
+        /* CHAT AREA */
+        .chat-content {
+          width: 100%;
+          max-width: 800px;
+          margin: 0 auto;
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          padding: 0 1rem;
+        }
+
+        .chat-area {
+          flex: 1;
+          padding: 1rem 0;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .message {
+          width: fit-content;
+          max-width: 100%;
+          margin: 0.5rem 0;
+          padding: 0.75rem 1rem;
+          border-radius: var(--border-radius);
+          background-color: #343541;
+          color: var(--text-color);
+          position: relative;
+        }
+
+        .message.user {
+          align-self: flex-end;
+          background-color: #444654;
+        }
+
+        .message.bot {
+          align-self: flex-start;
+          background-color: #202123;
+          position: relative;
+          padding-bottom: 30px;
+          margin-bottom: 10px;
+        }
+
+        .message-header {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 0.5rem;
+        }
+
+        .avatar {
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          overflow: hidden;
+          background-color: #555;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.8rem;
+        }
+
+        .avatar img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .username {
+          font-weight: bold;
+          font-size: 0.9rem;
+        }
+
+        /* BARRA DE AÇÕES */
+        .action_bar {
+          position: absolute;
+          left: 10px;
+          bottom: -25px;
+          display: flex;
+          gap: 8px;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+
+        .message.bot:hover .action_bar,
+        .message.bot:last-child .action_bar {
+          opacity: 1;
+        }
+
+        .action_bar button {
+          background: rgba(255, 255, 255, 0.1);
+          border: none;
+          border-radius: 4px;
+          color: white;
+          cursor: pointer;
+          padding: 4px 8px;
+          font-size: 14px;
+          transition: background 0.2s;
+          width: 30px;
+          height: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .action_bar button:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* INPUT AREA */
+        .input-area {
+          padding: 1rem 0;
+          border-top: 1px solid rgba(255, 255, 255, 0.05);
+          display: flex;
+          justify-content: center;
+          position: relative;
+        }
+
+        .input-container {
+          background-color: #40414f;
+          border-radius: var(--border-radius);
+          padding: 0.5rem;
+          display: flex;
+          align-items: flex-end;
+          width: 100%;
+          max-width: 800px;
+          position: relative;
+        }
+
+        .input-container textarea {
+          flex-grow: 1;
+          background-color: transparent;
+          border: none;
+          color: var(--text-color);
+          font-size: 1rem;
+          padding: 0.5rem;
+          resize: none;
+          min-height: 60px;
+          max-height: 150px;
+          overflow-y: auto;
+        }
+
+        .input-container textarea:focus {
+          outline: none;
+        }
+
+        .input-actions {
+          display: flex;
+          align-items: center;
+          margin-left: 0.5rem;
+        }
+
+        .input-actions button {
+          background-color: transparent;
+          border: none;
+          color: var(--text-color);
+          padding: 0.5rem;
+          border-radius: var(--border-radius);
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+          margin: 0 0.1rem;
+        }
+
+        .input-actions button:hover {
+          background-color: var(--hover-color);
+        }
+
+        .mic-button {
+          background: none;
+          border: none;
+          cursor: pointer;
+          transition: transform 0.2s ease;
+          margin-left: 10px;
+        }
+
+        .mic-button i {
+          font-size: 1.2rem;
+          color: #ccc;
+          transition: transform 0.3s ease, color 0.3s ease;
+        }
+
+        .mic-button:hover i {
+          transform: scale(1.3);
+        }
+
+        .mic-button.recording i {
+          color: red;
+          animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+          0% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.2); opacity: 0.6; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* SCROLL TO BOTTOM */
+        .scroll-to-bottom {
+          position: fixed;
+          bottom: 170px;
+          left: 55%;
+          transform: translateX(-50%);
+          z-index: 1000;
+          width: 42px;
+          height: 42px;
+          border-radius: 50%;
+          background-color: #40414f;
+          color: white;
+          border: none;
+          cursor: pointer;
+          font-size: 22px;
+          display: none;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+          transition: all 0.3s ease;
+        }
+
+        .scroll-to-bottom:hover {
+          transform: translateX(-50%) translateY(-5px);
+          opacity: 1;
+        }
+
+        /* TEMA LIGHT */
+        :root.light {
+          --bg-color: #f7f7f8;
+          --sidebar-color: #ffffff;
+          --text-color: #343541;
+          --hover-color: rgba(0, 0, 0, 0.05);
+          --scrollbar-color: rgba(0, 0, 0, 0.1);
+          --red-line: #ff3b30;
+          
+          /* Componentes específicos para light mode */
+          --message-bg: #ffffff;
+          --user-message-bg: #f0f0f0;
+          --bot-message-bg: #f7f7f8;
+          --input-bg: #ffffff;
+          --border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .light .message {
+          background-color: var(--message-bg);
+          border: 1px solid var(--border-color);
+        }
+
+        .light .message.user {
+          background-color: var(--user-message-bg);
+        }
+
+        .light .message.bot {
+          background-color: var(--bot-message-bg);
+        }
+
+        .light .input-container {
+          background-color: var(--input-bg);
+          border: 1px solid var(--border-color);
+        }
+
+        .light .sidebar {
+          border-right: 1px solid var(--border-color);
+        }
+
+        .light .input-area {
+          border-top: 1px solid var(--border-color);
+        }
+
+        .light .sidebar-header select {
+          border: 1px solid var(--border-color);
+        }
+
+        .light .mic-button i {
+          color: #666;
+        }
+
+        .light .scroll-to-bottom {
+          background-color: #e0e0e0;
+          color: #333;
+        }
+
+        /* BOTÃO TEMA */
+        .floating-theme-btn {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          background-color: #10a37f;
+          color: white;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          z-index: 1000;
+          transition: all 0.3s ease;
+        }
+
+        .floating-theme-btn:hover {
+          background-color: #0e8c6d;
+          transform: scale(1.08);
+        }
+
+        .floating-theme-btn i {
+          font-size: 1.2rem;
+          transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .sun-icon {
+          opacity: 0;
+          transform: rotate(90deg);
+          position: absolute;
+        }
+
+        .moon-icon {
+          opacity: 1;
+          transform: rotate(0);
+          position: absolute;
+        }
+
+        .light .sun-icon {
+          opacity: 1;
+          transform: rotate(0);
+        }
+
+        .light .moon-icon {
+          opacity: 0;
+          transform: rotate(-90deg);
+        }
+
+        /* HISTÓRICO DE CONVERSAS */
+        .history-item {
+          padding: 0.75rem;
+          border-radius: var(--border-radius);
+          margin-bottom: 0.5rem;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+          font-size: 0.9rem;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .history-item:hover {
+          background-color: var(--hover-color);
+        }
+
+        .history-item.active {
+          background-color: rgba(16, 163, 127, 0.2);
+        }
+
+        /* RESPONSIVIDADE */
+        @media (max-width: 1024px) {
+          .sidebar {
+            position: fixed;
+            z-index: 1000;
+            transform: translateX(-100%);
+          }
+          
+          .sidebar.active {
+            transform: translateX(0);
+          }
+          
+          .chat-container {
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .input-container {
+            width: 95%;
+          }
+          
+          .message {
+            max-width: 90%;
+          }
+        }
+
+        @media (max-width: 480px) {
+          body {
+            padding-top: 60px;
+          }
+          
+          .header {
+            padding: 0 1rem;
+          }
+          
+          .input-container textarea {
+            height: 70px;
+            font-size: 0.9rem;
+          }
+        }
+
+        /* PREVIEW DE IMAGENS */
+        .preview-zone {
+          display: flex;
+          gap: 8px;
+          margin-top: 8px;
+          flex-wrap: wrap;
+        }
+
+        .img_preview {
+          position: relative;
+          width: 80px;
+          height: 67px;
+          border-radius: 5px;
+          overflow: hidden;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .light .img_preview {
+          border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .img_preview img,
+        .img_preview embed {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .img_preview .remove-btn {
+          position: absolute;
+          top: -5px;
+          right: -5px;
+          background: red;
+          color: white;
+          border: none;
+          border-radius: 50%;
+          font-size: 12px;
+          cursor: pointer;
+          width: 16px;
+          height: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">Especialist</div>
+        <div class="header-actions">
+            <select class="expert-select">
+                <option value="general">Assistente Geral</option>
+                <option value="tech">Especialista em TI</option>
+                <option value="marketing">Especialista em Marketing</option>
+                <option value="design">Designer</option>
+            </select>
+            <div class="avatar">
+                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User">
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <select>
+                <option>Nova conversa</option>
+                <option>GPT-4</option>
+                <option>Claude 2</option>
+                <option>Bard</option>
+            </select>
+            <button id="new-chat"><i class="fas fa-plus"></i></button>
+        </div>
+
+        <nav class="sidebar-menu">
+            <ul>
+                <li><a href="#"><i class="fas fa-inbox"></i> Caixa de Entrada</a></li>
+                <li><a href="#"><i class="fas fa-star"></i> Favoritos</a></li>
+                <li><a href="#"><i class="fas fa-file"></i> Documentos</a></li>
+                <li><a href="#"><i class="fas fa-cog"></i> Configurações</a></li>
+            </ul>
+        </nav>
+
+        <div class="history-section">
+            <h4>Histórico</h4>
+            <div class="history-item active">Como criar um site responsivo</div>
+            <div class="history-item">Melhores práticas de SEO</div>
+            <div class="history-item">Diferença entre React e Vue</div>
+            <div class="history-item">Como otimizar imagens para web</div>
+            <div class="history-item">Tutorial de JavaScript avançado</div>
+        </div>
+
+        <div class="sidebar-footer">
+            <button id="upgrade-btn"><i class="fas fa-crown"></i> Upgrade</button>
+        </div>
+    </aside>
+
+    <!-- Chat Container -->
+    <main class="chat-container">
+        <div class="chat-content">
+            <div class="chat-area" id="chat-area">
+                <!-- Mensagem do Bot -->
+                <div class="message bot">
+                    <div class="message-header">
+                        <div class="avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <span class="username">Assistente IA</span>
+                    </div>
+                    <div class="message-content">
+                        Olá! Sou o Assistente IA da Especialist. Como posso te ajudar hoje? Posso responder perguntas, ajudar com códigos, analisar documentos e muito mais.
+                    </div>
+                    <div class="action_bar">
+                        <button title="Curtir"><i class="fas fa-thumbs-up"></i></button>
+                        <button title="Descurtir"><i class="fas fa-thumbs-down"></i></button>
+                        <button title="Copiar"><i class="fas fa-copy"></i></button>
+                        <button title="Exportar PDF"><i class="fas fa-file-pdf"></i></button>
+                        <button title="Compartilhar"><i class="fas fa-share"></i></button>
+                    </div>
+                </div>
+
+                <!-- Mensagem do Usuário -->
+                <div class="message user">
+                    <div class="message-header">
+                        <span class="username">Você</span>
+                        <div class="avatar">
+                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User">
+                        </div>
+                    </div>
+                    <div class="message-content">
+                        Preciso de ajuda para criar um formulário de login em HTML e CSS que seja responsivo.
+                    </div>
+                </div>
+
+                <!-- Mensagem do Bot com Código -->
+                <div class="message bot">
+                    <div class="message-header">
+                        <div class="avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <span class="username">Assistente IA</span>
+                    </div>
+                    <div class="message-content">
+                        Claro! Aqui está um exemplo de formulário de login responsivo:
+                        
+                        <div class="code-container">
+                            <div class="code-header">
+                                <div>login-form.html</div>
+                                <div class="actions">
+                                    <button class="btn"><i class="fas fa-copy"></i> Copiar</button>
+                                </div>
+                            </div>
+                            <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="pt-BR"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Login&lt;/title&gt;
+    &lt;style&gt;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        /* Estilos responsivos */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 1.5rem;
+                margin: 0 1rem;
+            }
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class="login-container"&gt;
+        &lt;h2&gt;Login&lt;/h2&gt;
+        &lt;form&gt;
+            &lt;div class="form-group"&gt;
+                &lt;label for="email"&gt;Email:&lt;/label&gt;
+                &lt;input type="email" id="email" required&gt;
+            &lt;/div&gt;
+            &lt;div class="form-group"&gt;
+                &lt;label for="password"&gt;Senha:&lt;/label&gt;
+                &lt;input type="password" id="password" required&gt;
+            &lt;/div&gt;
+            &lt;button type="submit"&gt;Entrar&lt;/button&gt;
+        &lt;/form&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                        </div>
+                    </div>
+                    <div class="action_bar">
+                        <button title="Curtir"><i class="fas fa-thumbs-up"></i></button>
+                        <button title="Descurtir"><i class="fas fa-thumbs-down"></i></button>
+                        <button title="Copiar"><i class="fas fa-copy"></i></button>
+                        <button title="Exportar PDF"><i class="fas fa-file-pdf"></i></button>
+                        <button title="Compartilhar"><i class="fas fa-share"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <div class="input-container">
+                    <textarea placeholder="Digite sua mensagem..." rows="1"></textarea>
+                    <div class="input-actions">
+                        <button title="Anexar arquivo"><i class="fas fa-paperclip"></i></button>
+                        <button title="Enviar imagem"><i class="fas fa-image"></i></button>
+                        <button class="mic-button" title="Gravar áudio">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <button title="Enviar" class="send-button">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botão de scroll para baixo -->
+        <button class="scroll-to-bottom" id="scroll-to-bottom" title="Ir para baixo">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+    </main>
+
+    <!-- Botão de alternar tema -->
+    <button class="floating-theme-btn" id="theme-toggle">
+        <i class="fas fa-sun sun-icon"></i>
+        <i class="fas fa-moon moon-icon"></i>
+    </button>
+
+    <script>
+        // Alternar tema claro/escuro
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light');
+            
+            // Salvar preferência no localStorage
+            const isLight = document.body.classList.contains('light');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        });
+
+        // Verificar preferência salva
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light');
+        }
+
+        // Auto-ajuste da altura do textarea
+        const textarea = document.querySelector('textarea');
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        // Simular botão de gravação
+        const micButton = document.querySelector('.mic-button');
+        micButton.addEventListener('click', function() {
+            this.classList.toggle('recording');
+        });
+
+        // Mostrar/ocultar botão de scroll para baixo
+        const chatArea = document.getElementById('chat-area');
+        const scrollToBottomBtn = document.getElementById('scroll-to-bottom');
+        
+        chatArea.addEventListener('scroll', function() {
+            const scrollTop = chatArea.scrollTop;
+            const scrollHeight = chatArea.scrollHeight;
+            const clientHeight = chatArea.clientHeight;
+            
+            // Mostrar botão se não estiver no final
+            if (scrollTop + clientHeight < scrollHeight - 100) {
+                scrollToBottomBtn.style.display = 'flex';
+            } else {
+                scrollToBottomBtn.style.display = 'none';
+            }
+        });
+
+        // Rolar para baixo quando clicar no botão
+        scrollToBottomBtn.addEventListener('click', function() {
+            chatArea.scrollTop = chatArea.scrollHeight;
+        });
+
+        // Mostrar ações ao passar o mouse nas mensagens do bot
+        const botMessages = document.querySelectorAll('.message.bot');
+        botMessages.forEach(message => {
+            message.addEventListener('mouseenter', () => {
+                message.querySelector('.action_bar').style.opacity = '1';
+            });
+            
+            message.addEventListener('mouseleave', () => {
+                // Não esconder se for a última mensagem
+                if (!message.classList.contains('last-message')) {
+                    message.querySelector('.action_bar').style.opacity = '0';
+                }
+            });
+        });
+
+        // Simular funcionalidade dos botões de ação
+        document.querySelectorAll('.action_bar button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const action = button.querySelector('i').className;
+                alert(`Ação: ${action.replace('fas fa-', '')}`);
+            });
+        });
+
+        // Marcar última mensagem do bot
+        if (botMessages.length > 0) {
+            botMessages[botMessages.length - 1].classList.add('last-message');
+        }
+    </script>
+</body>
+</html>
